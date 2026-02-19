@@ -2,152 +2,116 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Envios Diários</title>
+    <title>Controle de Envios - Cloud</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #e9ecef; color: #333; }
-        .main-container { max-width: 1000px; margin: auto; display: flex; flex-wrap: wrap; gap: 20px; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; min-width: 300px; }
-        .sidebar { flex: 0 0 300px; background: #fff; padding: 20px; border-radius: 10px; border-left: 5px solid #007bff; }
-        
-        h2, h3 { margin-top: 0; color: #007bff; }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; font-size: 0.9em; font-weight: bold; margin-bottom: 5px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-add { background-color: #28a745; color: white; }
-        .btn-pdf { background-color: #dc3545; color: white; }
-        button:hover { opacity: 0.8; }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; }
+        /* O estilo permanece o mesmo do anterior para manter o visual */
+        body { font-family: sans-serif; margin: 20px; background: #e9ecef; }
+        .main-container { max-width: 1000px; margin: auto; display: flex; gap: 20px; flex-wrap: wrap; }
+        .card { background: white; padding: 20px; border-radius: 10px; flex: 1; min-width: 300px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .sidebar { flex: 0 0 300px; background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #007bff; }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 5px; color: white; }
+        .btn-add { background: #28a745; }
+        .btn-pdf { background: #dc3545; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
         th, td { border-bottom: 1px solid #eee; padding: 10px; text-align: left; }
-        th { background-color: #f8f9fa; }
-        
-        .resumo-item { background: #f1f8ff; padding: 10px; border-radius: 5px; margin-bottom: 8px; border-bottom: 1px solid #cce5ff; }
-        .total-valor { font-weight: bold; color: #0056b3; }
+        .resumo-item { background: #f1f8ff; padding: 8px; border-radius: 5px; margin-bottom: 5px; border: 1px solid #cce5ff; }
     </style>
 </head>
 <body>
 
-<div class="main-container" id="conteudo-relatorio">
+<div class="main-container" id="relatorio">
     <div class="card">
-        <h2>Novo Registro</h2>
-        <div class="form-group">
-            <label>Empresa:</label>
-            <input type="text" id="empresa" placeholder="Ex: Banco Pan">
-        </div>
-        <div class="form-group">
-            <label>Nome do Arquivo:</label>
-            <input type="text" id="arquivo" placeholder="Ex: remessa_01.txt">
-        </div>
-        <div class="form-group">
-            <label>Quantidade de Registros:</label>
-            <input type="number" id="registros" placeholder="Ex: 5000">
-        </div>
-        <div class="form-group">
-            <label>Meio de Envio:</label>
-            <select id="envio">
-                <option value="SMS">SMS</option>
-                <option value="EMAIL">EMAIL</option>
-                <option value="WHATS">WHATSAPP</option>
-                <option value="CARTA">CARTA</option>
-            </select>
-        </div>
-        
-        <div class="btn-group">
-            <button class="btn-add" onclick="adicionarRegistro()">Adicionar</button>
-            <button class="btn-pdf" onclick="gerarPDF()">Gerar PDF</button>
-        </div>
+        <h2>Novo Registro (Cloud)</h2>
+        <input type="text" id="empresa" placeholder="Empresa">
+        <input type="text" id="arquivo" placeholder="Nome do Arquivo">
+        <input type="number" id="registros" placeholder="Qtd Registros">
+        <select id="envio">
+            <option value="SMS">SMS</option>
+            <option value="EMAIL">EMAIL</option>
+            <option value="WHATS">WHATSAPP</option>
+            <option value="CARTA">CARTA</option>
+        </select>
+        <button class="btn-add" id="btnSalvar">Salvar no Banco</button>
+        <button class="btn-pdf" onclick="gerarPDF()">Gerar PDF</button>
 
-        <table id="tabelaDados">
-            <thead>
-                <tr>
-                    <th>Empresa</th>
-                    <th>Arquivo</th>
-                    <th>Registros</th>
-                    <th>Envio</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
+        <table id="tabela">
+            <thead><tr><th>Empresa</th><th>Arquivo</th><th>Qtd</th><th>Tipo</th></tr></thead>
+            <tbody id="corpoTabela"></tbody>
         </table>
     </div>
 
     <div class="sidebar">
-        <h3>Resumo por Categoria</h3>
-        <div id="resumoConsolidado">
-            <p style="color: #888;">Nenhum dado inserido ainda.</p>
-        </div>
+        <h3>Totalizadores</h3>
+        <div id="resumo"></div>
     </div>
 </div>
 
-<script>
-    let registrosGerais = [];
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    function adicionarRegistro() {
-        const empresa = document.getElementById('empresa').value.trim().toUpperCase();
-        const arquivo = document.getElementById('arquivo').value.trim();
-        const qtd = parseInt(document.getElementById('registros').value);
-        const envio = document.getElementById('envio').value;
+  // TODO: COLE SUAS CONFIGURAÇÕES AQUI EMBAIXO
+  const firebaseConfig = {
+    apiKey: "SUA_API_KEY",
+    authDomain: "SEU_PROJETO.firebaseapp.com",
+    projectId: "SEU_PROJETO",
+    storageBucket: "SEU_PROJETO.appspot.com",
+    messagingSenderId: "ID",
+    appId: "APP_ID"
+  };
 
-        if(!empresa || !arquivo || isNaN(qtd)) {
-            alert("Preencha todos os campos corretamente.");
-            return;
-        }
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-        // Salva no array global
-        registrosGerais.push({ empresa, arquivo, qtd, envio });
+  // SALVAR DADOS
+  document.getElementById('btnSalvar').onclick = async () => {
+    const empresa = document.getElementById('empresa').value.toUpperCase();
+    const arquivo = document.getElementById('arquivo').value;
+    const qtd = parseInt(document.getElementById('registros').value);
+    const envio = document.getElementById('envio').value;
 
-        atualizarInterface();
+    if(!empresa || !arquivo || isNaN(qtd)) return alert("Preencha tudo!");
+
+    try {
+      await addDoc(collection(db, "envios"), {
+        empresa, arquivo, qtd, envio, data: new Date()
+      });
+      document.getElementById('empresa').value = '';
+      document.getElementById('arquivo').value = '';
+      document.getElementById('registros').value = '';
+    } catch (e) { alert("Erro ao salvar!"); }
+  };
+
+  // LER DADOS EM TEMPO REAL
+  onSnapshot(query(collection(db, "envios"), orderBy("data", "desc")), (snapshot) => {
+    let html = "";
+    let totais = {};
+    
+    snapshot.forEach((doc) => {
+        const d = doc.data();
+        html += `<tr><td>${d.empresa}</td><td>${d.arquivo}</td><td>${d.qtd}</td><td>${d.envio}</td></tr>`;
         
-        // Limpa campos de texto
-        document.getElementById('empresa').value = '';
-        document.getElementById('arquivo').value = '';
-        document.getElementById('registros').value = '';
+        const chave = `${d.empresa} | ${d.envio}`;
+        totais[chave] = (totais[chave] || 0) + d.qtd;
+    });
+
+    document.getElementById('corpoTabela').innerHTML = html;
+    
+    let resumoHtml = "";
+    for(let k in totais) {
+        resumoHtml += `<div class="resumo-item"><b>${k}:</b> ${totais[k].toLocaleString()}</div>`;
     }
-
-    function atualizarInterface() {
-        const tbody = document.querySelector('#tabelaDados tbody');
-        const resumoDiv = document.getElementById('resumoConsolidado');
-        
-        // 1. Atualiza Tabela Principal
-        tbody.innerHTML = "";
-        registrosGerais.forEach(reg => {
-            const linha = tbody.insertRow();
-            linha.innerHTML = `<td>${reg.empresa}</td><td>${reg.arquivo}</td><td>${reg.qtd.toLocaleString()}</td><td>${reg.envio}</td>`;
-        });
-
-        // 2. Calcula Totais (Agrupamento)
-        const totais = {};
-        registrosGerais.forEach(reg => {
-            const chave = `${reg.empresa} | ${reg.envio}`;
-            totais[chave] = (totais[chave] || 0) + reg.qtd;
-        });
-
-        // 3. Atualiza Painel Lateral
-        resumoDiv.innerHTML = "";
-        for (const [key, value] of Object.entries(totais)) {
-            const item = document.createElement('div');
-            item.className = 'resumo-item';
-            item.innerHTML = `<strong>${key}:</strong> <span class="total-valor">${value.toLocaleString()}</span>`;
-            resumoDiv.appendChild(item);
-        }
-    }
-
-    function gerarPDF() {
-        const elemento = document.getElementById('conteudo-relatorio');
-        const opcoes = {
-            margin: 10,
-            filename: 'relatorio-de-envios.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-        };
-        html2pdf().set(opcoes).from(elemento).save();
-    }
+    document.getElementById('resumo').innerHTML = resumoHtml || "Aguardando dados...";
+  });
 </script>
 
+<script>
+    function gerarPDF() {
+        const opt = { margin: 10, filename: 'envios.pdf', html2canvas: { scale: 2 }, jsPDF: { orientation: 'landscape' } };
+        html2pdf().set(opt).from(document.getElementById('relatorio')).save();
+    }
+</script>
 </body>
 </html>
